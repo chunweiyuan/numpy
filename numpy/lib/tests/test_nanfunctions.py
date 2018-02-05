@@ -1,3 +1,4 @@
+import decimal
 import warnings
 import pytest
 
@@ -5,7 +6,7 @@ import numpy as np
 from numpy.lib.nanfunctions import _nan_mask, _replace_nan
 from numpy.testing import (
     assert_, assert_equal, assert_almost_equal, assert_no_warnings,
-    assert_raises, assert_array_equal, suppress_warnings
+    assert_raises, assert_array_equal, suppress_warnings, assert_raises_regex
     )
 
 
@@ -890,6 +891,28 @@ class TestNanFunctions_Percentile:
         megamat = np.ones((3, 4, 5, 6))
         assert_equal(np.nanpercentile(megamat, perc, axis=(1, 2)).shape, (2, 3, 6))
 
+    def test_weights(self):
+        """
+        Tests that the weights argument works.  More detailed
+        weight tests exist in TestQuantile.
+        """
+        a = np.array([[0., 1., 2.], [3., 4., 5.]])
+        a[0][1] = np.nan
+        # regression tests
+        assert_equal(np.nanpercentile(a, q=50, weights=np.ones(6).reshape(2, 3)),
+                     np.nanpercentile(a, q=50))
+        assert_equal(np.nanpercentile(a, q=50, axis=0, weights=[1, 1]),
+                     np.nanpercentile(a, q=50, axis=0))
+        assert_equal(np.nanpercentile(a, q=50, axis=1, weights=[1, 1, 1]),
+                     np.nanpercentile(a, q=50, axis=1))
+        # unequal weights
+        axis = 1
+        weights = [0, 1, 2]
+        stand_in = np.stack((a[:, 1], a[:, 2], a[:, 2]), axis=axis)
+        assert_almost_equal(np.nanpercentile(a, q=50, axis=axis,
+                            weights=weights),
+                            np.nanpercentile(stand_in, q=50, axis=axis))
+
 
 class TestNanFunctions_Quantile:
     # most of this is already tested by TestPercentile
@@ -908,6 +931,14 @@ class TestNanFunctions_Quantile:
         assert_equal(np.nanquantile(ar, q=[0.25, 0.5, 0.75], axis=1),
                      np.nanpercentile(ar, q=[25, 50, 75], axis=1))
 
+        weights = np.arange(24).reshape(2, 3, 4)
+        assert_equal(np.nanquantile(ar, q=0.5, weights=weights),
+                     np.nanpercentile(ar, q=50, weights=weights))
+        axis = 1
+        weights = [0, 1, 2]
+        assert_equal(np.nanquantile(ar, q=0.5, axis=axis, weights=weights),
+                     np.nanpercentile(ar, q=50, axis=axis, weights=weights))
+
     def test_basic(self):
         x = np.arange(8) * 0.5
         assert_equal(np.nanquantile(x, 0), 0.)
@@ -925,6 +956,123 @@ class TestNanFunctions_Quantile:
         p = p.tolist()
         np.nanquantile(np.arange(100.), p, interpolation="midpoint")
         assert_array_equal(p, p0)
+
+    def test_weights_all_ones(self):
+        ar = np.arange(24).reshape(2, 3, 4).astype(float)
+        ar[0][1][1:3] = np.nan
+        q = 0.5
+
+        axis = 0
+        weights = [1, 1]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        expected = np.nanquantile(ar, q=q, axis=axis)
+        assert_almost_equal(actual, expected)
+
+        axis = 1
+        weights = [1, 1, 1]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        expected = np.nanquantile(ar, q=q, axis=axis)
+        assert_almost_equal(actual, expected)
+
+        axis = 2
+        weights = [1, 1, 1, 1]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        expected = np.nanquantile(ar, q=q, axis=axis)
+        assert_almost_equal(actual, expected)
+
+        # weights over multiple dimensions
+        weights = np.ones(24).reshape(2, 3, 4)
+        actual = np.nanquantile(ar, q=q, weights=weights)
+        expected = np.nanquantile(ar, q=q)
+        assert_almost_equal(actual, expected)
+
+        # broadcsted weights
+        weights = np.ones(8).reshape(2, 1, 4)
+        actual = np.nanquantile(ar, q=q, weights=weights)
+        assert_almost_equal(actual, expected)
+
+    def test_multiple_axes(self):
+        ar = np.arange(12).reshape(3, 4).astype(float)
+        ar[0][0] = np.nan
+        q = 0.5
+
+        expected = np.nanquantile(ar, q=q, weights=np.ones(12).reshape(3, 4))
+        actual = np.nanquantile(ar, q=q, axis=(0, 1),
+                                weights=np.ones(12).reshape(3, 4))
+        assert_almost_equal(actual, expected)
+
+    def test_various_weights(self):
+        ar = np.arange(12).reshape(3, 4).astype(float)
+        ar[0][0] = np.nan
+        axis = 0
+        q = [0.25, 0.5, 0.75]
+
+        # all twos
+        weights = [2.0, 2.0, 2.0]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        ar_222 = np.concatenate((ar, ar), axis=axis)
+        expected = np.nanquantile(ar_222, q=q, axis=axis)
+        assert_almost_equal(actual, expected)
+
+        # different integer weights
+        weights = [1, 2, 3]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        ar_123 = np.stack((ar[0, :], ar[1, :], ar[1, :],
+                           ar[2, :], ar[2, :], ar[2, :]), axis=axis)
+        expected = np.nanquantile(ar_123, q=q, axis=axis)
+        assert_almost_equal(actual, expected)
+
+        # mix of numeric types
+        # because of the nan entry at ar[0][0],
+        # the 1st column (where the nan is) will NOT be re-normalized.
+        # So the 1st column quantiles are not equal to when weights = [1, 2, 3]
+        weights = [decimal.Decimal(0.5), 1, 1.5]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        assert_almost_equal(actual[..., 1:], expected[..., 1:])
+        # 1st columns are different
+        assert_raises(AssertionError, assert_almost_equal,
+                      actual[..., 0], expected[..., 0])
+
+        # 1st column non-nan weights re-normalized, but only to [1.0, 1.5]
+        weights = [0.2, 0.4, 0.6]
+        actual = np.quantile(ar, q=q, axis=axis, weights=weights)
+        assert_almost_equal(actual[..., 1:], expected[..., 1:])
+        # 1st columns are different
+        assert_raises(AssertionError, assert_almost_equal,
+                      actual[..., 0], expected[..., 0])
+
+        # various weights, including a zero
+        weights = [0, 1, 2]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        ar_012 = np.stack((ar[1, :], ar[2, :], ar[2, :]), axis=axis)
+        expected = np.nanquantile(ar_012, q=q, axis=axis)
+        assert_almost_equal(actual, expected)
+
+        # weight entries < 1
+        weights = [0.0, 0.001, 0.002]
+        actual = np.nanquantile(ar, q=q, axis=axis, weights=weights)
+        assert_almost_equal(actual, expected)
+
+    def test_weights_flags(self):
+        ar = np.arange(6).reshape(2, 3).astype(float)
+        ar[0][1] = np.nan
+
+        with assert_raises_regex(TypeError, 'Axis must be specified'):
+            np.nanquantile(ar, q=0.5, weights=[1, 1])
+        with assert_raises_regex(TypeError, '1D weights expected'):
+            np.nanquantile(ar, q=0.5, axis=0, weights=[[1, 1]])
+        with assert_raises_regex(ValueError,
+                                 'Length of weights not compatible'):
+            np.nanquantile(ar, q=0.5, axis=0, weights=[1, 1, 1])
+        with assert_raises_regex(ValueError, 'could not convert'):
+            np.nanquantile(ar, q=0.5, axis=0, weights=[1, 'bad'])
+        with assert_raises_regex(ValueError, 'No weight can be NaN'):
+            np.nanquantile(ar, q=0.5, axis=0, weights=[1, np.nan])
+        with assert_raises_regex(ValueError, 'Negative weight not allowed'):
+            np.nanquantile(ar, q=0.5, axis=0, weights=[1, -1])
+        with assert_raises_regex(ZeroDivisionError, 'Weights sum to zero'):
+            np.nanquantile(ar, q=0.5, axis=0, weights=[0, 0])
+
 
 @pytest.mark.parametrize("arr, expected", [
     # array of floats with some nans
