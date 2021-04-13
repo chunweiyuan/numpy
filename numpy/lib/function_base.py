@@ -4565,7 +4565,7 @@ def trapz(y, x=None, dx=1.0, axis=-1):
         a single axis by the trapezoidal rule. If 'y' is a 1-dimensional array,
         then the result is a float. If 'n' is greater than 1, then the result
         is an 'n-1' dimensional array.
-        
+
     See Also
     --------
     sum, cumsum

@@ -65,6 +65,7 @@ def _nan_mask(a, out=None):
     y = np.invert(y, out=y)
     return y
 
+
 def _replace_nan(a, val):
     """
     If `a` is of inexact type, make a copy of `a`, replace NaNs with
@@ -238,8 +239,8 @@ def nanmin(a, axis=None, out=None, keepdims=np._NoValue):
         Array containing numbers whose minimum is desired. If `a` is not an
         array, a conversion is attempted.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the minimum is computed. The default is to compute
-        the minimum of the flattened array.
+        Axis or axes along which the minimum is computed.
+        The default is to compute the minimum of the flattened array.
     out : ndarray, optional
         Alternate output array in which to place the result.  The default
         is ``None``; if provided, it must have the same shape as the
@@ -353,8 +354,8 @@ def nanmax(a, axis=None, out=None, keepdims=np._NoValue):
         Array containing numbers whose maximum is desired. If `a` is not an
         array, a conversion is attempted.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the maximum is computed. The default is to compute
-        the maximum of the flattened array.
+        Axis or axes along which the maximum is computed.
+        The default is to compute the maximum of the flattened array.
     out : ndarray, optional
         Alternate output array in which to place the result.  The default
         is ``None``; if provided, it must have the same shape as the
@@ -569,8 +570,8 @@ def nansum(a, axis=None, dtype=None, out=None, keepdims=np._NoValue):
         Array containing numbers whose sum is desired. If `a` is not an
         array, a conversion is attempted.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the sum is computed. The default is to compute the
-        sum of the flattened array.
+        Axis or axes along which the sum is computed.
+        The default is to compute the sum of the flattened array.
     dtype : data-type, optional
         The type of the returned array and of the accumulator in which the
         elements are summed.  By default, the dtype of `a` is used.  An
@@ -584,8 +585,8 @@ def nansum(a, axis=None, dtype=None, out=None, keepdims=np._NoValue):
         Alternate output array in which to place the result.  The default
         is ``None``. If provided, it must have the same shape as the
         expected output, but the type will be cast if necessary.  See
-        :ref:`ufuncs-output-type` for more details. The casting of NaN to integer
-        can yield unexpected results.
+        :ref:`ufuncs-output-type` for more details.
+        The casting of NaN to integer can yield unexpected results.
 
         .. versionadded:: 1.8.0
     keepdims : bool, optional
@@ -668,8 +669,8 @@ def nanprod(a, axis=None, dtype=None, out=None, keepdims=np._NoValue):
         Array containing numbers whose product is desired. If `a` is not an
         array, a conversion is attempted.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the product is computed. The default is to compute
-        the product of the flattened array.
+        Axis or axes along which the product is computed.
+        The default is to compute the product of the flattened array.
     dtype : data-type, optional
         The type of the returned array and of the accumulator in which the
         elements are summed.  By default, the dtype of `a` is used.  An
@@ -681,8 +682,8 @@ def nanprod(a, axis=None, dtype=None, out=None, keepdims=np._NoValue):
         Alternate output array in which to place the result.  The default
         is ``None``. If provided, it must have the same shape as the
         expected output, but the type will be cast if necessary. See
-        :ref:`ufuncs-output-type` for more details. The casting of NaN to integer
-        can yield unexpected results.
+        :ref:`ufuncs-output-type` for more details.
+        The casting of NaN to integer can yield unexpected results.
     keepdims : bool, optional
         If True, the axes which are reduced are left in the result as
         dimensions with size one. With this option, the result will
@@ -725,9 +726,9 @@ def _nancumsum_dispatcher(a, axis=None, dtype=None, out=None):
 @array_function_dispatch(_nancumsum_dispatcher)
 def nancumsum(a, axis=None, dtype=None, out=None):
     """
-    Return the cumulative sum of array elements over a given axis treating Not a
-    Numbers (NaNs) as zero.  The cumulative sum does not change when NaNs are
-    encountered and leading NaNs are replaced by zeros.
+    Return the cumulative sum of array elements over a given axis treating
+    Not a Numbers (NaNs) as zero.  The cumulative sum does not change when
+    NaNs are encountered and leading NaNs are replaced by zeros.
 
     Zeros are returned for slices that are all-NaN or empty.
 
@@ -749,8 +750,8 @@ def nancumsum(a, axis=None, dtype=None, out=None):
     out : ndarray, optional
         Alternative output array in which to place the result. It must
         have the same shape and buffer length as the expected output
-        but the type will be cast if necessary. See :ref:`ufuncs-output-type` for
-        more details.
+        but the type will be cast if necessary.
+        See :ref:`ufuncs-output-type` for more details.
 
     Returns
     -------
@@ -795,9 +796,9 @@ def _nancumprod_dispatcher(a, axis=None, dtype=None, out=None):
 @array_function_dispatch(_nancumprod_dispatcher)
 def nancumprod(a, axis=None, dtype=None, out=None):
     """
-    Return the cumulative product of array elements over a given axis treating Not a
-    Numbers (NaNs) as one.  The cumulative product does not change when NaNs are
-    encountered and leading NaNs are replaced by ones.
+    Return the cumulative product of array elements over a given axis treating
+    Not a Numbers (NaNs) as one.  The cumulative product does not change when
+    NaNs are encountered and leading NaNs are replaced by ones.
 
     Ones are returned for slices that are all-NaN or empty.
 
@@ -878,8 +879,8 @@ def nanmean(a, axis=None, dtype=None, out=None, keepdims=np._NoValue):
         Array containing numbers whose mean is desired. If `a` is not an
         array, a conversion is attempted.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the means are computed. The default is to compute
-        the mean of the flattened array.
+        Axis or axes along which the means are computed.
+        The default is to compute the mean of the flattened array.
     dtype : data-type, optional
         Type to use in computing the mean.  For integer inputs, the default
         is `float64`; for inexact inputs, it is the same as the input
@@ -1020,7 +1021,8 @@ def _nanmedian_dispatcher(
 
 
 @array_function_dispatch(_nanmedian_dispatcher)
-def nanmedian(a, axis=None, out=None, overwrite_input=False, keepdims=np._NoValue):
+def nanmedian(a, axis=None, out=None, overwrite_input=False,
+              keepdims=np._NoValue):
     """
     Compute the median along the specified axis, while ignoring NaNs.
 
@@ -1125,8 +1127,9 @@ def _nanpercentile_dispatcher(a, q, axis=None, weights=None, out=None,
 
 
 @array_function_dispatch(_nanpercentile_dispatcher)
-def nanpercentile(a, q, axis=None, weights=None, out=None, overwrite_input=False,
-                  interpolation='linear', keepdims=np._NoValue):
+def nanpercentile(a, q, axis=None, weights=None, out=None,
+                  overwrite_input=False, interpolation='linear',
+                  keepdims=np._NoValue):
     """
     Compute the qth percentile of the data along the specified axis,
     while ignoring nan values.
@@ -1561,8 +1564,8 @@ def nanvar(a, axis=None, dtype=None, out=None, ddof=0, keepdims=np._NoValue):
         Array containing numbers whose variance is desired.  If `a` is not an
         array, a conversion is attempted.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the variance is computed.  The default is to compute
-        the variance of the flattened array.
+        Axis or axes along which the variance is computed.
+        The default is to compute the variance of the flattened array.
     dtype : data-type, optional
         Type to use in computing the variance.  For arrays of integer type
         the default is `float64`; for arrays of float types it is the same as
@@ -1710,8 +1713,9 @@ def nanstd(a, axis=None, dtype=None, out=None, ddof=0, keepdims=np._NoValue):
     a : array_like
         Calculate the standard deviation of the non-NaN values.
     axis : {int, tuple of int, None}, optional
-        Axis or axes along which the standard deviation is computed. The default is
-        to compute the standard deviation of the flattened array.
+        Axis or axes along which the standard deviation is computed.
+        The default is to compute the standard deviation of the flattened
+        array.
     dtype : dtype, optional
         Type to use in computing the standard deviation. For arrays of
         integer type the default is float64, for arrays of float types it
